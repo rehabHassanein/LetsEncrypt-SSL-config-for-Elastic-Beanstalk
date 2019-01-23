@@ -72,6 +72,15 @@ files:
             proxy_set_header        Connection      "upgrade";
         }
       }
+  # Certificate auto renewal cron job
+  /tmp/renew_cert_cron:
+    mode: "000777"
+    owner: root
+    group: root
+    content: |
+        # renew Lets encrypt cert with certbot command
+        0 1,13 * * * /tmp/certbot-auto renew
+
 packages: 
   yum:
     epel-release: [] 
@@ -87,4 +96,7 @@ container_commands:
     command: "sudo ln -sf /etc/letsencrypt/live/${CERTDOMAIN} /etc/letsencrypt/live/ebcert"
   50_config:
     command: "sudo mv /etc/nginx/conf.d/https_custom.pre /etc/nginx/conf.d/https_custom.conf"
-    
+  60_create_cert_crontab:
+        command: "sudo crontab /tmp/renew_cert_cron"
+  70_delete_cronjob_file:
+        command: "sudo  rm /tmp/renew_cert_cron"
